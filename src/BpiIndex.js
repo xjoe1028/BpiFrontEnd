@@ -1,6 +1,7 @@
 import React from "react";
 import axios from "axios";
 import BpiCRUDTable from "./BpiCRUDTable";
+import BpiTable from "./BpiTable";
 // UI套件庫 antd
 import { Form, Input, Button } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
@@ -8,8 +9,6 @@ import { SearchOutlined } from "@ant-design/icons";
 import "./App.css";
 import "./index.css";
 import "antd/dist/antd.css";
-import BpiTable from "./BpiTable";
-
 
 const codeMaxLength = 3;
 
@@ -17,8 +16,9 @@ const styles = {
   container: { margin: "auto", width: "fit-content", textAlign: 'center' },
 };
 
-class BpiIndex extends React.Component {
+const url = "http://localhost:8080/api/bpi";
 
+class BpiIndex extends React.Component {
   constructor(props) {
     super(props);
     // State: 應用程式狀態
@@ -35,10 +35,54 @@ class BpiIndex extends React.Component {
   select = () => {
     const code = this.state.code;
     console.log(code);
-    if (code !== undefined) {
+    if (code !== undefined && code !== "" && code.length > 0) {
+      this.selectOne(code);
     } else {
+      this.selectAll();
     }
   };
+
+  /**
+   * 查詢所有
+   */
+  selectAll = () => {
+    const findAllUrl = url + "/findAllBpis";
+    fetch(findAllUrl, { method: "get" })
+      .then((res) => res.json())
+      .then((res) => {
+        console.log(res);
+        if (res.code === "0000") {
+          this.setState({ data: res.data });
+        }
+      });
+  };
+
+  /**
+   * 查詢單一
+   * 
+   * @param {*} code 
+   */
+  selectOne(code) {
+    const params = { code: code };
+    let query = Object.keys(params)
+      .map((k) => encodeURIComponent(k) + "=" + encodeURIComponent(params[k]))
+      .join("&");
+    const findOneUrl = url + "/findBpi/code?" + query;
+    console.log('url', findOneUrl);
+    fetch(findOneUrl, { method: "get" })
+      .then((res) => res.json())
+      .then((res) => {
+        console.log(res);
+        if (res.code === "0000") {
+          this.setState({ data: res.data });
+        }
+      });
+  }
+
+  // // 更新頁面
+  // componentDidMount() {
+  //   this.select();
+  // }
 
   render() {
     return (
@@ -71,7 +115,6 @@ class BpiIndex extends React.Component {
         </div>
         <br />
         <BpiTable />
-        {/* <BpiCRUDTable /> */}
       </>
     );
   }
