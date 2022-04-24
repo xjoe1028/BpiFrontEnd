@@ -356,4 +356,13 @@ code {
     margin-left: 10px;
     margin-right: 10px; */
   }
+
+  .bpiAddButton {
+    margin-bottom: 10;
+  }
+
+  .bpiReturnIndex {
+    margin-bottom: 10;
+    margin-left: 10;
+  }
 }
