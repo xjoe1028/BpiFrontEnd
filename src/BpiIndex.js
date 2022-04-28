@@ -67,77 +67,14 @@ class BpiIndex extends React.Component {
   }
 
   setCode = (value) => {
-    this.setState({ code: value });
+    const code = value.toUpperCase();
+    this.setState({ code: code });
   };
-
-  columns = [
-    {
-      title: "序號",
-      dataIndex: "id",
-      key: "id",
-      defaultSortOrder: "ascend", // 預設排列: ascend 升冪, descend 降冪
-      sorter: (a, b) => a.id - b.id,
-    },
-    {
-      title: "貨幣名稱",
-      dataIndex: "code",
-      key: "code",
-    },
-    {
-      title: "貨幣中文名稱",
-      dataIndex: "codeChineseName",
-      key: "codeChineseName",
-    },
-    {
-      title: "匯率",
-      dataIndex: "rate",
-      key: "rate",
-      defaultSortOrder: "ascend", // 預設排列: ascend 升冪, descend 降冪
-      sorter: (a, b) => parseFloat(a.rate) - parseFloat(b.rate),
-    },
-    {
-      title: "描述",
-      dataIndex: "description",
-      key: "description",
-    },
-    {
-      title: "操作",
-      dataIndex: "action",
-      key: "action",
-      render: (_, record) => (
-        <div>
-          <Button
-            type="primary"
-            shape="round"
-            icon={<EditOutlined />}
-            style={renderButtonStyle}
-            onClick={() => this.updateBpiForm(record)}
-          >
-            修改
-          </Button>
-          <Popconfirm
-            title="確定刪除?"
-            onConfirm={() => this.deleteBpi(record)}
-          >
-            <Button
-              type="primary"
-              shape="round"
-              danger={true}
-              icon={<DeleteOutlined />}
-              style={renderButtonStyle}
-            >
-              刪除
-            </Button>
-          </Popconfirm>
-        </div>
-      ),
-    },
-  ];
 
   /**
    * 按下 新增表單 彈出
    */
-  addBpiForm() {
+  addBpiForm = () => {
     this.setState({ visible: true, item: {}, method: 'post' }, () => {
       const param = this.state.item;
       this.formRef.current.setFieldsValue({
@@ -156,7 +93,7 @@ class BpiIndex extends React.Component {
    *
    * @param {*} data
    */
-  updateBpiForm(data) {
+  updateBpiForm = (data) => {
     this.setState({ visible: true, item: data, method: 'put' }, () => {
       const param = this.state.item;
       this.formRef.current.setFieldsValue({
@@ -176,7 +113,7 @@ class BpiIndex extends React.Component {
    * @param {*} data
    * @returns
    */
-  deleteBpi(data) {
+  deleteBpi = (data) => {
     this.axiosMethod(data, 'delete');
   };
 
@@ -185,7 +122,7 @@ class BpiIndex extends React.Component {
    *
    * @param {*} event
    */
-  onOk() {
+  onOk = () => {
     this.formRef.current
       .validateFields()
       .then((values) => this.formRef.current.resetFields())
@@ -203,7 +140,7 @@ class BpiIndex extends React.Component {
   /**
    * 按下新增修改彈出表單取消按鈕
    */
-  onCancel() {
+  onCancel = () => {
     this.setState({ visible: false, item: {} }, () => {
       const param = this.state.item;
       this.formRef.current.setFieldsValue({
@@ -220,7 +157,7 @@ class BpiIndex extends React.Component {
   /**
    * call 父元件(BpiIndex) 的 function 回到初始化頁面
    */
-  redirectIndex() {
+  redirectIndex = () => {
     this.setState({allBpi: [], hiddenFlag: true});
   }
 
@@ -237,7 +174,7 @@ class BpiIndex extends React.Component {
    * @param {*} param 
    * @param {*} method 
    */
-  async axiosMethod(param, method = 'get') {
+   axiosMethod = async (param, method = 'get') => {
     let {allBpi} = this.state;
     console.log('method : ', method);
     console.log('data', param);
@@ -388,34 +325,88 @@ class BpiIndex extends React.Component {
     }
   }
 
-  handleResponse(res,fn) {
-    const {data} = res;
-    const {bpi} = res.data;
-    if (data.code === "0000") {
-      fn();
-    } else {
-      const { message } = data;
-      alert(message);
-    }
-  }
-
   /**
    * 初始化首頁
    */
-  initIndex(code = "") {
+  initIndex = (code = "") => {
     this.setState({
       code: code,
       allBpi: undefined,
     });
   }
 
-  updateAllBpi(allBpi) {
+  updateAllBpi = (allBpi) => {
     this.setState(() => { return { allBpi: allBpi };});
   }
 
   render() {
+
+    const columns = [
+      {
+        title: "序號",
+        dataIndex: "id",
+        key: "id",
+        defaultSortOrder: "ascend", // 預設排列: ascend 升冪, descend 降冪
+        sorter: (a, b) => a.id - b.id,
+      },
+      {
+        title: "貨幣名稱",
+        dataIndex: "code",
+        key: "code",
+      },
+      {
+        title: "貨幣中文名稱",
+        dataIndex: "codeChineseName",
+        key: "codeChineseName",
+      },
+      {
+        title: "匯率",
+        dataIndex: "rate",
+        key: "rate",
+        defaultSortOrder: "ascend", // 預設排列: ascend 升冪, descend 降冪
+        sorter: (a, b) => parseFloat(a.rate) - parseFloat(b.rate),
+      },
+      {
+        title: "描述",
+        dataIndex: "description",
+        key: "description",
+      },
+      {
+        title: "操作",
+        dataIndex: "action",
+        key: "action",
+        render: (_, record) => (
+          <div>
+            <Button
+              type="primary"
+              shape="round"
+              icon={<EditOutlined />}
+              style={renderButtonStyle}
+              onClick={() => this.updateBpiForm(record)}
+            >
+              修改
+            </Button>
+            <Popconfirm
+              title="確定刪除?"
+              onConfirm={() => this.deleteBpi(record)}
+            >
+              <Button
+                type="primary"
+                shape="round"
+                danger={true}
+                icon={<DeleteOutlined />}
+                style={renderButtonStyle}
+              >
+                刪除
+              </Button>
+            </Popconfirm>
+          </div>
+        ),
+      },
+    ];
+
     return (
-      <>
+      <React.Fragment>
         {/* Bpi index 首頁  */}
         <div style={styles.container}>
           <h1>各國貨幣資料查詢</h1>
@@ -430,13 +421,13 @@ class BpiIndex extends React.Component {
                 value={this.state.code}
                 placeholder={"TWD"}
                 maxLength={3}
-                onChange={(e) => this.setCode(e.target.value.toUpperCase())}
+                onChange={(e) => this.setCode(e.target.value)}
               />
             </Form.Item>
             <Button
               type="primary"
               icon={<SearchOutlined />}
-              onClick={this.select}
+              onClick={() => this.select()}
             >
               查詢
             </Button>
@@ -514,16 +505,17 @@ class BpiIndex extends React.Component {
           <div>
             <Table
               dataSource={this.state.allBpi}
-              columns={this.columns}
+              columns={columns}
               bordered
               title={() => "幣別資料表"}
+              rowKey={record => record.id}
             ></Table>
           </div>
         </div>
 
         {/* <BpiTable allBpi={this.state.allBpi} initIndex={this.initIndex} updateAllBpi={this.updateAllBpi} /> */}
         {/* {this.state.allBpi ? <BpiTable allBpi={this.state.allBpi} initIndex={this.initIndex} updateAllBpi={this.updateAllBpi} /> : ''}  */}
-      </>
+      </React.Fragment>
     );
   }
 }
