@@ -118,23 +118,16 @@ class BpiIndex extends React.Component {
   };
 
   /**
-   * 新增 修改 表單 submit
-   *
-   * @param {*} event
+   * 新增 or 修改 表單 按下 submit
    */
   onOk = () => {
     this.formRef.current
       .validateFields()
-      .then((values) => this.formRef.current.resetFields())
-      .catch((info) => console.log("Validate Failed:", info));
-
-    const data = this.formRef.current.getFieldsValue();
-
-    console.log("data", data);
-
-    this.axiosMethod(data, this.state.method);
-
-    // this.props.history.push();
+      .then(values => this.axiosMethod(values, this.state.method))
+      .catch(info => {
+        console.log("Validate Failed:", info);
+        return;
+      });
   }
 
   /**
@@ -165,7 +158,38 @@ class BpiIndex extends React.Component {
    * 按下 查詢按鈕
    */
   select = () => {
-    this.axiosMethod();
+    const {code} = this.state;
+    if (code) {
+      this.axiosMethod(code);
+    } else {
+      this.axiosMethod();
+    }
+  }
+
+  /**
+   * handle get method response
+   * 
+   * @param {*} res 
+   */
+   handleGetRes = (res) => {
+    const {data} = res;
+    let bpiList = [];
+    let id = 1;
+    if (data.code === "0000") {
+      if (data.data.length) {
+        bpiList = data.data;
+        bpiList.forEach(bpi => bpi.id = id++);
+      } else {
+        const bpi = data.data;
+        bpi.id = id;
+        bpiList = [bpi];
+      }
+      this.setState({allBpi: bpiList});
+    } else {
+      this.setState({allBpi: []});
+      const { message } = data;
+      alert(message);
+    }
   }
 
   /**
@@ -177,52 +201,26 @@ class BpiIndex extends React.Component {
    axiosMethod = async (param, method = 'get') => {
     let {allBpi} = this.state;
     console.log('method : ', method);
-    console.log('data', param);
+    console.log('data : ', param);
     console.log('allBpi', allBpi);
 
     switch (method) {
       case 'get':
-        const {code} = this.state;
-        let url = selectAllUrl;
-        if (code !== null && code !== undefined && code !== "" && code.length > 0) {
-          const params = { code: code };
-          this.setState({allBpi: allBpi.filter(b => b.code === params.code)});
-          // await axios.get(url, params)
-          //   .then((res)=>{
-          //     const {data} = res;
-          //     const {bpi} = res.data;
-          //     this.handleResponse(res, function() {
-          //       this.setState({ allBpi: [...allBpi, bpi] });
-          //     });
-          //     // if (data.code === "0000") {
-          //     //   console.log("新增成功");
-          //     //   this.setState({ allBpi: [...allBpi, bpi] });
-          //     // } else {
-          //     //   const { message } = data;
-          //     //   alert(message);
-          //     // }
-          //   })
-          //   .catch(err => console.log(err));
-        } else {
-          const allBpi = [...testData];
-          console.log('selectAll state.Bpi before: ', this.state.allBpi);
+        if (param !== null && param !== undefined && param !== "" && param.length > 0) {
+          // this.setState({allBpi: allBpi.filter(b => b.code === code)});
           this.setState({allBpi: allBpi, hiddenFlag: false});
-          // await axios.get(selectAllUrl)
-          //   .then((res)=>{
-          //     const {data} = res;
-          //     const {bpi} = res.data;
-          //     this.handleResponse(res, function() {
-          //       this.setState({ allBpi: [...allBpi, bpi] });
-          //     });
-          //     // if (data.code === "0000") {
-          //     //   console.log("新增成功");
-          //     //   this.setState({ allBpi: [...allBpi, bpi] });
-          //     // } else {
-          //     //   const { message } = data;
-          //     //   alert(message);
-          //     // }
-          //   })
-          //   .catch(err => console.log(err));
+          await axios
+            .get(selectOneUrl, { params: { code: param } })
+            .then(res => this.handleGetRes(res))
+            .catch(err => console.log(err));
+        } else {
+          // const allBpi = [...testData];
+          console.log('selectAll state.Bpi before: ', allBpi);
+          this.setState({allBpi: allBpi, hiddenFlag: false});
+          await axios
+            .get(selectAllUrl)
+            .then(res => this.handleGetRes(res))
+            .catch(err => console.log(err));
         }
         break;
       case 'post':
@@ -480,7 +478,13 @@ class BpiIndex extends React.Component {
               <Form.Item
                 label="幣別中文名稱"
                 name="codeChineseName"
-                rules={[{ required: true, message: "請輸入幣別中文名稱" }]}
+                rules={[
+                  { required: true, message: "請輸入幣別中文名稱" },
+                  {
+                    pattern: new RegExp("^[\\u4e00-\\u9fa5]*$"),
+                    message: "請輸入中文",
+                  },
+                ]}
               >
                 <Input placeholder="新台幣" />
               </Form.Item>
@@ -508,7 +512,7 @@ class BpiIndex extends React.Component {
               columns={columns}
               bordered
               title={() => "幣別資料表"}
-              rowKey={record => record.id}
+              rowKey={(record) => record.id}
             ></Table>
           </div>
         </div>
