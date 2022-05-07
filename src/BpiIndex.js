@@ -239,7 +239,7 @@ class BpiIndex extends React.Component {
           code: param.code,
           codeChineseName: param.codeChineseName,
           rate: param.rate,
-          rate_float: parseFloat(param.rate),
+          rateFloat: parseFloat(param.rate),
           description: param.description,
         };
         console.log('addParam', addParam);
@@ -260,20 +260,20 @@ class BpiIndex extends React.Component {
         this.onCancel();
         break;
       case 'put':
-        allBpi = allBpi.map((b) => {
-          if (b.code === param.code) {
-            return {
-              id: b.id,
-              code: param.code,
-              codeChineseName: param.codeChineseName,
-              rate: param.rate,
-              description: param.description,
-            };
-          } else {
-            return b;
-          }
-        });
-        this.setState({ allBpi: allBpi });
+        // allBpi = allBpi.map((b) => {
+        //   if (b.code === param.code) {
+        //     return {
+        //       id: b.id,
+        //       code: param.code,
+        //       codeChineseName: param.codeChineseName,
+        //       rate: param.rate,
+        //       description: param.description,
+        //     };
+        //   } else {
+        //     return b;
+        //   }
+        // });
+        // this.setState({ allBpi: allBpi });
 
         // await axios.put(updateUrl, param)
         //   .then((res)=>{
