@@ -224,38 +224,40 @@ class BpiIndex extends React.Component {
         }
         break;
       case 'post':
-        allBpi = [...allBpi, {
-          id: allBpi.length + 1,
+        // allBpi = [...allBpi, {
+        //   id: allBpi.length + 1,
+        //   code: param.code,
+        //   codeChineseName: param.codeChineseName,
+        //   rate: param.rate,
+        //   description: param.description
+        // }];
+
+        // this.setState({allBpi: allBpi});
+        // this.onCancel();
+
+        const addParam = {
           code: param.code,
           codeChineseName: param.codeChineseName,
           rate: param.rate,
-          description: param.description
-        }];
-
-        this.setState({allBpi: allBpi});
-        this.onCancel();
-
-        await axios.post(addUrl, param)
+          rate_float: parseFloat(param.rate),
+          description: param.description,
+        };
+        console.log('addParam', addParam);
+        await axios.post(addUrl, addParam)
           .then((res) => {
             const {data} = res;
             const {bpi} = res.data;
             
-            this.handleResponse(res, function() {
+            if (data.code === "0000") {
+              console.log("新增成功");
               this.setState({ allBpi: [...allBpi, bpi] });
-            });
-            
-            // if (data.code === "0000") {
-            //   console.log("新增成功");
-            //   this.setState({ allBpi: [...allBpi, bpi] });
-            // } else {
-            //   const { message } = data;
-            //   alert(message);
-            // }
+            } else {
+              const { message } = data;
+              alert(message);
+            }
           })
-          .catch((err)=>{
-            console.log(err);
-          });
-        
+          .catch(err => console.log(err));
+        this.onCancel();
         break;
       case 'put':
         allBpi = allBpi.map((b) => {
