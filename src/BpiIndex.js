@@ -63,6 +63,7 @@ class BpiIndex extends React.Component {
       allBpi: [], // table bpiList
       pageSize: defaultPageSize, // 預設table一頁顯示五筆資料
       hiddenFlag: true, // 新增修改表單顯示flag
+      oldCode: '',
     };
 
     this.redirectIndex = this.redirectIndex.bind(this);
@@ -96,7 +97,7 @@ class BpiIndex extends React.Component {
    * @param {*} data
    */
   updateBpiForm = (data) => {
-    this.setState({ visible: true, item: data, method: 'put' }, () => {
+    this.setState({ visible: true, item: data, method: 'put', oldCode: data.code }, () => {
       const param = this.state.item;
       this.formRef.current.setFieldsValue({
         // 對應到 <Form.Item></Form.Item> 的 name 屬性
@@ -207,6 +208,7 @@ class BpiIndex extends React.Component {
       rate: param.rate,
       rateFloat: parseFloat(param.rate),
       description: param.description,
+      oldCode: this.state.oldCode,
     }
 
     return addAndUpdateParam;
@@ -296,8 +298,8 @@ class BpiIndex extends React.Component {
             const bpi = data.data;
             if (data.code === "0000") {
               console.log(data.message);
-              allBpi.map(b => {
-                if (b.code === bpi.code) {
+              allBpi = allBpi.map(b => {
+                if (b.code === this.state.oldCode) {
                   return {
                     id: b.id,
                     code: bpi.code,
@@ -316,16 +318,6 @@ class BpiIndex extends React.Component {
             }
           })
           .catch(err => console.log(err));
-        this.onCancel();
-        break;
-      case 'patch':
-        // await axios.patch(patchUrl, param)
-        //   .then((res)=>{
-
-        //   })
-        //   .catch((err)=>{
-        //     console.log(err);
-        //   });
         this.onCancel();
         break;
       case 'delete':
@@ -428,8 +420,6 @@ class BpiIndex extends React.Component {
       total: this.state.allBpi.length,  // 數據總筆數
       // pageSizeOptions: [10, 20, 50, 100], // 指定每頁可以顯示多少筆 預設 [10, 20, 50, 100]
       onChange: (page, pageSize) => {
-        console.log(`當前頁碼 : ${page} `);
-        console.log(`選項每頁顯示筆數  ${pageSize}`);
         this.setState({ pageSize: pageSize });
       }, // 頁碼或pageSize改變的回調，參數page:當前頁，pageSize 每頁顯示筆數
       // onShowSizeChange: (current, pageSize) => {
