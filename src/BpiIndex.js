@@ -49,7 +49,7 @@ const testData = [
   },
 ];
 
-const defaultPageSize = 5;
+const defaultPageSize = 10;
 class BpiIndex extends React.Component {
 
   formRef = React.createRef(); // 定義一個表單
@@ -195,6 +195,24 @@ class BpiIndex extends React.Component {
   }
 
   /**
+   * 新增 and 更新 組Rq
+   * 
+   * @param {*} param 
+   * @returns 
+   */
+  buildRqData = (param) => {
+    const addAndUpdateParam = {
+      code: param.code,
+      codeChineseName: param.codeChineseName,
+      rate: param.rate,
+      rateFloat: parseFloat(param.rate),
+      description: param.description,
+    }
+
+    return addAndUpdateParam;
+  }
+
+  /**
    * axios call backend restful api
    * 
    * @param {*} param 
@@ -237,20 +255,13 @@ class BpiIndex extends React.Component {
         // this.setState({allBpi: allBpi});
         // this.onCancel();
 
-        const addParam = {
-          code: param.code,
-          codeChineseName: param.codeChineseName,
-          rate: param.rate,
-          rateFloat: parseFloat(param.rate),
-          description: param.description,
-        };
-
         await axios
-          .post(addUrl, addParam)
+          .post(addUrl, this.buildRqData(param))
           .then(res => {
             const {data} = res;
-            const {bpi} = res.data;
-            
+            const bpi = data.data;
+            bpi.id = allBpi.length + 1;
+
             if (data.code === "0000") {
               console.log("新增成功");
               this.setState({ allBpi: [...allBpi, bpi] });
@@ -278,20 +289,21 @@ class BpiIndex extends React.Component {
         // });
         // this.setState({ allBpi: allBpi });
 
-        await axios.put(updateUrl, param)
+        await axios
+          .put(updateUrl, this.buildRqData(param))
           .then(res => {
             const {data} = res;
-            const {param} = res.data;
+            const bpi = data.data;
             if (data.code === "0000") {
-              console.log("修改成功");
-              allBpi = allBpi.map(b => {
-                if (b.code === param.code) {
+              console.log(data.message);
+              allBpi.map(b => {
+                if (b.code === bpi.code) {
                   return {
                     id: b.id,
-                    code: param.code,
-                    codeChineseName: param.codeChineseName,
-                    rate: param.rate,
-                    description: param.description,
+                    code: bpi.code,
+                    codeChineseName: bpi.codeChineseName,
+                    rate: bpi.rate,
+                    description: bpi.description,
                   };
                 } else {
                   return b;
@@ -318,10 +330,16 @@ class BpiIndex extends React.Component {
         break;
       case 'delete':
         // this.setState({ allBpi: allBpi.filter(b => b.code !== param.code) });
-
-        await axios.delete(deleteUrl, param)
+        await axios
+          .delete(deleteUrl, { data: param })
           .then(res => {
-
+            const { data } = res;
+            const bpi = data.data;
+            if (data.code === "0000") {
+              this.setState({
+                allBpi: allBpi.filter((b) => b.code !== bpi.code),
+              });
+            }
           })
           .catch(err => console.log(err));
         break;
@@ -398,26 +416,26 @@ class BpiIndex extends React.Component {
     ];
 
     /**
-     * 分頁props
+     * 分頁props config
      */
     const paginationProps = {
-      defaultCurrent: 1, // 預設當前頁
-      defaultPageSize: 10, // 預設每頁條數
-      showSizeChanger: true, // 是否展示 pageSize 切换器，当 total > 50 時默認 true
+      defaultCurrent: 1,      // 預設當前頁
+      defaultPageSize: 10,    // 預設每頁條數
+      showSizeChanger: true,  // 是否展示 pageSize 切换器，当 total > 50 時默認 true
       showQuickJumper: false, // 是否可以快速跳轉至某頁
-      showTotal: () => `共${this.state.allBpi.length}筆`,
-      pageSize: this.state.pageSize, // 每頁條數
-      total: this.state.allBpi.length, //數據總筆數
-      pageSizeOptions: [defaultPageSize, 10, 20, 50, 100], // 指定每頁可以顯示多少筆
+      showTotal: (total, range) => `共${total}筆`, // total:總筆數 range:每頁顯示幾筆到幾筆
+      pageSize: this.state.pageSize,    // 每頁筆數
+      total: this.state.allBpi.length,  // 數據總筆數
+      // pageSizeOptions: [10, 20, 50, 100], // 指定每頁可以顯示多少筆 預設 [10, 20, 50, 100]
       onChange: (page, pageSize) => {
         console.log(`當前頁碼 : ${page} `);
         console.log(`選項每頁顯示筆數  ${pageSize}`);
         this.setState({ pageSize: pageSize });
-      }, // 頁碼或pageSize改變的回調，参数是改變後的頁碼及顯示每頁筆數
-      onShowSizeChange: (current, pageSize) => {
-        //設置每頁顯示數據調數，current表示當前頁碼，pageSize表示每頁顯示筆數
-        this.setState({ pageSize: pageSize });
-      }, // pageSize 變化的callBack
+      }, // 頁碼或pageSize改變的回調，參數page:當前頁，pageSize 每頁顯示筆數
+      // onShowSizeChange: (current, pageSize) => {
+      //   //設置每頁顯示數據調數，current表示當前頁，pageSize每頁顯示筆數
+      //   this.setState({ pageSize: pageSize });
+      // }, // pageSize 變化的callBack
     };
 
     return (
