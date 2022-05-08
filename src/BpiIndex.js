@@ -5,7 +5,7 @@ import BpiTable from "./BpiTable";
 // UI套件庫 antd
 import { DeleteOutlined, EditOutlined, PlusOutlined, RollbackOutlined } from "@ant-design/icons";
 import TextArea from "antd/lib/input/TextArea";
-import { Button, Popconfirm, Table, Form, Modal, Input} from "antd";
+import { Button, Popconfirm, Table, Form, Modal, Input, Pagination} from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 // Component's Base CSS
 import "./App.css";
@@ -48,6 +48,8 @@ const testData = [
     description: "New Taiwan Dollar3",
   },
 ];
+
+const defaultPageSize = 5;
 class BpiIndex extends React.Component {
 
   formRef = React.createRef(); // 定義一個表單
@@ -56,13 +58,13 @@ class BpiIndex extends React.Component {
     super(props);
     // State: 應用程式狀態
     this.state = {
-      code: "",
-      item: {},
-      hiddenFlag: true,
+      code: "",   // 幣別欄位初始值
+      item: {},   // 單筆bpi物件
+      allBpi: [], // table bpiList
+      pageSize: defaultPageSize, // 預設table一頁顯示五筆資料
+      hiddenFlag: true, // 新增修改表單顯示flag
     };
 
-    this.initIndex = this.initIndex.bind(this);
-    this.updateAllBpi = this.updateAllBpi.bind(this);
     this.redirectIndex = this.redirectIndex.bind(this);
   }
 
@@ -151,7 +153,7 @@ class BpiIndex extends React.Component {
    * call 父元件(BpiIndex) 的 function 回到初始化頁面
    */
   redirectIndex = () => {
-    this.setState({allBpi: [], hiddenFlag: true});
+    this.setState({ allBpi: [], hiddenFlag: true, pageSize: defaultPageSize });
   }
 
   /**
@@ -193,7 +195,7 @@ class BpiIndex extends React.Component {
   }
 
   /**
-   * axios 
+   * axios call backend restful api
    * 
    * @param {*} param 
    * @param {*} method 
@@ -242,9 +244,10 @@ class BpiIndex extends React.Component {
           rateFloat: parseFloat(param.rate),
           description: param.description,
         };
-        console.log('addParam', addParam);
-        await axios.post(addUrl, addParam)
-          .then((res) => {
+
+        await axios
+          .post(addUrl, addParam)
+          .then(res => {
             const {data} = res;
             const {bpi} = res.data;
             
@@ -275,28 +278,32 @@ class BpiIndex extends React.Component {
         // });
         // this.setState({ allBpi: allBpi });
 
-        // await axios.put(updateUrl, param)
-        //   .then((res)=>{
-        //     const {data} = res;
-        //     const {param} = res.data;
-        //     if (data.code === "0000") {
-        //       console.log("修改成功");
-        //       allBpi = allBpi.map(b => {
-        //         if(b.code === param.code) {
-        //           return {id: b.id, code:param.code, codeChineseName: param.codeChineseName, rate: param.rate, description: param.description}
-        //         } else {
-        //           return b;
-        //         }
-        //       });
-        //       this.setState({ allBpi: allBpi});
-        //     } else {
-        //       const { message } = data;
-        //       alert(message);
-        //     }
-        //   })
-        //   .catch((err)=>{
-        //     console.log(err);
-        //   });
+        await axios.put(updateUrl, param)
+          .then(res => {
+            const {data} = res;
+            const {param} = res.data;
+            if (data.code === "0000") {
+              console.log("修改成功");
+              allBpi = allBpi.map(b => {
+                if (b.code === param.code) {
+                  return {
+                    id: b.id,
+                    code: param.code,
+                    codeChineseName: param.codeChineseName,
+                    rate: param.rate,
+                    description: param.description,
+                  };
+                } else {
+                  return b;
+                }
+              });
+              this.setState({ allBpi: allBpi});
+            } else {
+              const { message } = data;
+              alert(message);
+            }
+          })
+          .catch(err => console.log(err));
         this.onCancel();
         break;
       case 'patch':
@@ -310,34 +317,19 @@ class BpiIndex extends React.Component {
         this.onCancel();
         break;
       case 'delete':
-        this.setState({ allBpi: allBpi.filter(b => b.code !== param.code) });
+        // this.setState({ allBpi: allBpi.filter(b => b.code !== param.code) });
 
-        // await axios.delete(deleteUrl, param)
-        //   .then((res)=>{
+        await axios.delete(deleteUrl, param)
+          .then(res => {
 
-        //   })
-        //   .catch((err)=>{
-        //     console.log(err);
-        //   });
+          })
+          .catch(err => console.log(err));
         break;
       default:
         break;
     }
   }
 
-  /**
-   * 初始化首頁
-   */
-  initIndex = (code = "") => {
-    this.setState({
-      code: code,
-      allBpi: undefined,
-    });
-  }
-
-  updateAllBpi = (allBpi) => {
-    this.setState(() => { return { allBpi: allBpi };});
-  }
 
   render() {
 
@@ -404,6 +396,29 @@ class BpiIndex extends React.Component {
         ),
       },
     ];
+
+    /**
+     * 分頁props
+     */
+    const paginationProps = {
+      defaultCurrent: 1, // 預設當前頁
+      defaultPageSize: 10, // 預設每頁條數
+      showSizeChanger: true, // 是否展示 pageSize 切换器，当 total > 50 時默認 true
+      showQuickJumper: false, // 是否可以快速跳轉至某頁
+      showTotal: () => `共${this.state.allBpi.length}筆`,
+      pageSize: this.state.pageSize, // 每頁條數
+      total: this.state.allBpi.length, //數據總筆數
+      pageSizeOptions: [defaultPageSize, 10, 20, 50, 100], // 指定每頁可以顯示多少筆
+      onChange: (page, pageSize) => {
+        console.log(`當前頁碼 : ${page} `);
+        console.log(`選項每頁顯示筆數  ${pageSize}`);
+        this.setState({ pageSize: pageSize });
+      }, // 頁碼或pageSize改變的回調，参数是改變後的頁碼及顯示每頁筆數
+      onShowSizeChange: (current, pageSize) => {
+        //設置每頁顯示數據調數，current表示當前頁碼，pageSize表示每頁顯示筆數
+        this.setState({ pageSize: pageSize });
+      }, // pageSize 變化的callBack
+    };
 
     return (
       <React.Fragment>
@@ -515,12 +530,10 @@ class BpiIndex extends React.Component {
               bordered
               title={() => "幣別資料表"}
               rowKey={(record) => record.id}
+              pagination={paginationProps}
             ></Table>
           </div>
         </div>
-
-        {/* <BpiTable allBpi={this.state.allBpi} initIndex={this.initIndex} updateAllBpi={this.updateAllBpi} /> */}
-        {/* {this.state.allBpi ? <BpiTable allBpi={this.state.allBpi} initIndex={this.initIndex} updateAllBpi={this.updateAllBpi} /> : ''}  */}
       </React.Fragment>
     );
   }
